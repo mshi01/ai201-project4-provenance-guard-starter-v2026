@@ -156,11 +156,20 @@ The higher AI threshold requires stronger evidence before labeling text as AI.
 ```bash
 $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "...", "creator_id": "..."}'
+  -d '{"text": "I missed the bus again, which was annoying, but the walk ended up being nice. I noticed a little bakery I had never seen before and bought a warm roll.", "creator_id": "me"}'
 ```
 
 ```json
-
+{
+  "combined_score": 0.5652632671081678,
+  "confidence": 0.5652632671081678,
+  "content_id": "c_b9dcd3fcab66",
+  "creator_id": "me",
+  "guess": "unsure",
+  "label": "We cannot tell confidently whether this was written by a person or by AI.",
+  "model_score": 0.5406,
+  "style_score": 0.6228108903605593
+}
 ```
 
 **An appeal**

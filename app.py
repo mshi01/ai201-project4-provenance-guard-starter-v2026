@@ -199,30 +199,62 @@ def submit():
     what should this do when `text` is missing, empty, or enormous? A crash on
     a malformed input is one of the most common real failures there is.
     """
-    payload = request.get_json(silent=True) or {}
+    import detector
+    import scoring
+    import stylometry
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        payload = {}
+
     text = payload.get("text")
-    creator_id = detector.model_signal(text)
     creator_id = payload.get("creator_id", "unknown")
+    if not isinstance(creator_id, str) or not creator_id.strip():
+        creator_id = "unknown"
 
     if not isinstance(text, str) or not text.strip():
-        return jsonify({"error": "bad_request", "message": "send JSON with a non-empty})
+        audit.log_rejection(creator_id, "missing_or_empty_text")
+        return jsonify({
+            "error": "bad_request",
+            "message": "send JSON with a non-empty message",
+        }), 400
+    if len(text) > config.MAX_SUBMISSION_CHARS:
+        audit.log_rejection(
+            creator_id,
+            "text_too_long",
+            character_count=len(text),
+            maximum_characters=config.MAX_SUBMISSION_CHARS,
+        )
+        return jsonify({
+            "error": "bad_request",
+            "message": f"text must be at most {config.MAX_SUBMISSION_CHARS} characters",
+        }), 400
 
+    model_score = detector.model_signal(text)
+    style_score = stylometry.style_signal(text)
+    combined_score = scoring.combine_signals(model_score, style_score)
+    guess, label = scoring.score_to_label(combined_score)
     content_id = f"c_{uuid.uuid4().hex[:12]}"
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
+        guess=guess,
         model_score=model_score,
+        style_score=style_score,
+        combined_score=combined_score,
+        label=label,
         status="decided",
     )
 
-    # TODO: delete this and build the route.
     return jsonify({
-        "content_id": "hardcoded",
-        "guess": "unsure",
-        "confidence": 0.5,
-        "label": "not built yet",
-        "model_score": None,
-        "style_score": None,
+        "content_id": content_id,
+        "creator_id": creator_id,
+        "guess": guess,
+        "confidence": combined_score,
+        "label": label,
+        "model_score": model_score,
+        "style_score": style_score,
+        "combined_score": combined_score,
     }), 200
 
 
@@ -246,14 +278,43 @@ def appeal():
     to the person on the other end. It's the only thing standing between a
     wrong accusation and nothing at all.
     """
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        payload = {}
 
-    # TODO: delete this and build the route.
+    content_id = payload.get("content_id")
+    reasoning = payload.get("reasoning")
+    if not isinstance(content_id, str) or not content_id.strip():
+        audit.log_rejection("unknown", "missing_content_id")
+        return jsonify({
+            "error": "bad_request",
+            "message": "content_id is required",
+        }), 400
+    if not isinstance(reasoning, str) or not reasoning.strip():
+        audit.log_rejection("unknown", "missing_appeal_reasoning", content_id=content_id)
+        return jsonify({
+            "error": "bad_request",
+            "message": "reasoning is required",
+        }), 400
+
+    entries = audit.entries_for(content_id)
+    decision = next((entry for entry in entries if entry.get("status") == "decided"), None)
+    if decision is None:
+        return jsonify({
+            "error": "not_found",
+            "message": "content_id was not found",
+        }), 404
+
+    entry = audit.log_appeal(
+        content_id=content_id,
+        creator_id=decision.get("creator_id", "unknown"),
+        reasoning=reasoning.strip(),
+    )
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /appeal isn't built yet — see the TODO in app.py.",
-        "you_sent": payload,
-    }), 501
+        "content_id": content_id,
+        "status": entry["status"],
+        "message": "Your appeal has been received and is under review.",
+    }), 200
 
 
 # ── Already works ─────────────────────────────────────────────────────────────
