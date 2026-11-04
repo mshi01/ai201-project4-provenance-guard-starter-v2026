@@ -93,7 +93,20 @@ This signal does not read the text meaning.
 
 **The rule:**
 
+The final score will be a weighted score of the model signal and the style signal.The model signal will have more weights.
+
+
 **The numbers:**
+
+WEIGHT_MODEL_SIGNAL = 0.7
+WEIGHT_STYLE_SIGNAL = 0.3
+
+The model signal measures predictability and is generally more meaningful than surface style. Stylometry is easier to manipulate with punctuation, sentence splitting, typos, or quotations, so giving it less weight reduces false accusations.
+
+HUMAN_THRESHOLD = 0.30
+AI_THRESHOLD = 0.75
+
+The higher AI threshold requires stronger evidence before labeling text as AI.
 
 **Where it lives:** `scoring.py::combine_signals`
 
