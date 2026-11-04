@@ -200,16 +200,30 @@ def submit():
     a malformed input is one of the most common real failures there is.
     """
     payload = request.get_json(silent=True) or {}
+    text = payload.get("text")
+    creator_id = detector.model_signal(text)
+    creator_id = payload.get("creator_id", "unknown")
+
+    if not isinstance(text, str) or not text.strip():
+        return jsonify({"error": "bad_request", "message": "send JSON with a non-empty})
+
+    content_id = f"c_{uuid.uuid4().hex[:12]}"
+    audit.log_decision(
+        content_id=content_id,
+        creator_id=creator_id,
+        model_score=model_score,
+        status="decided",
+    )
 
     # TODO: delete this and build the route.
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /submit isn't built yet — see the TODO in app.py.",
-        "you_sent": {
-            "text_length": len(payload.get("text", "")),
-            "creator_id": payload.get("creator_id"),
-        },
-    }), 501
+        "content_id": "hardcoded",
+        "guess": "unsure",
+        "confidence": 0.5,
+        "label": "not built yet",
+        "model_score": None,
+        "style_score": None,
+    }), 200
 
 
 @app.post("/appeal")

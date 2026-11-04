@@ -33,6 +33,15 @@ anything together:
 import re
 import statistics
 
+MAX_ANALYSIS_CHARS = 100_000
+
+
+def _analysis_text(text: str) -> str:
+    """Return a bounded string for the inexpensive style measures."""
+    if not isinstance(text, str) or not text:
+        return ""
+    return text[:MAX_ANALYSIS_CHARS]
+
 
 def sentences(text: str) -> list[str]:
     """Split into sentences. Rough and good enough — given to you."""
@@ -64,8 +73,14 @@ def sentence_length_spread(text: str) -> float:
     `stdev` raises on fewer than two values. Decide what that should return
     before the attack set decides for you.
     """
-    # TODO: replace this
-    return 0.0
+    bounded_text = _analysis_text(text)
+    lengths = [len(words(sentence)) for sentence in sentences(bounded_text)]
+    lengths = [length for length in lengths if length > 0]
+    if len(lengths) < 2:
+        return 0.0
+
+    mean_length = statistics.mean(lengths)
+    return statistics.stdev(lengths) / mean_length if mean_length else 0.0
 
 
 def type_token_ratio(text: str) -> float:
@@ -80,8 +95,10 @@ def type_token_ratio(text: str) -> float:
     directly comparable on it, and if your test inputs vary a lot in length,
     that alone can look like a signal.
     """
-    # TODO: replace this
-    return 0.0
+    tokens = words(_analysis_text(text))
+    if not tokens:
+        return 0.0
+    return len(set(tokens)) / len(tokens)
 
 
 def punctuation_density(text: str) -> float:
@@ -94,8 +111,12 @@ def punctuation_density(text: str) -> float:
         more interesting than full stops, because they vary more between
         writers.
     """
-    # TODO: replace this
-    return 0.0
+    bounded_text = _analysis_text(text)
+    if not bounded_text:
+        return 0.0
+
+    punctuation_count = len(re.findall(r"[^\w\s]", bounded_text))
+    return punctuation_count / len(bounded_text)
 
 
 # ── Combining them ───────────────────────────────────────────────────────────
@@ -122,8 +143,20 @@ def style_signal(text: str) -> float:
     you trust it. Plain and ordinary, not formal: formal prose reads as *human*
     to signal one, and it is plain writing that gets accused.
     """
-    # TODO: replace this
-    return 0.5
+    bounded_text = _analysis_text(text)
+    if not bounded_text:
+        return 0.0
+
+    spread = sentence_length_spread(bounded_text)
+    vocabulary_variety = type_token_ratio(bounded_text)
+    punctuation = punctuation_density(bounded_text)
+
+    # Each component is scaled to 0-1, with higher values meaning more AI-like.
+    low_spread = 1.0 / (1.0 + spread)
+    repeated_vocabulary = 1.0 - vocabulary_variety
+    low_punctuation = 1.0 - min(punctuation / 0.10, 1.0)
+
+    return (low_spread + repeated_vocabulary + low_punctuation) / 3.0
 
 
 if __name__ == "__main__":

@@ -55,17 +55,36 @@
 
 **What it measures:**
 
+It runs a language model on your own machine and asks one question: **how predictable is this text?**. It measures **perplexity**. Low perplexity means "I could have guessed this"; high perplexity means "that surprised me".
+
 **Why that might differ between human and AI writing:**
 
+A language model writes by repeatedly picking a likely next word, so text a model produced tends
+to be text a model finds easy to predict. Human writing wanders more — odd word
+choices, abrupt turns, the specific rather than the typical. 
+
 **What it can't see:**
+
+Predictability is not the same thing as authorship. What this signal actually rewards is **common words in short, ordinary sentences** — and plenty of real people write that way.
 
 ### Signal two — the style signal
 
 **What it measures:**
 
+This one measures it *as text* — the shape of it, without understanding a word.
+It performed three measures: 
+- sentence_length_spread   do sentences vary in length, or march in step?
+- type_token_ratio         how much of the vocabulary repeats?
+- punctuation_density      how much punctuation, and how varied?
+
 **Why that might differ between human and AI writing:**
 
+Generated prose tends toward even, mid-length sentences and a narrower band of vocabulary, because
+that's what "most likely next word" produces on average. Human writing is often more varied. 
+
 **What it can't see:**
+
+This signal does not read the text meaning. 
 
 ### The combining rule
 

@@ -46,10 +46,12 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. It must name a number. -->
 
+Across three repeated trials of 10 human-written texts, no more than 1 text per trial is labeled high-confidence AI.
 
 
 **Why this target:**
 
+ A false accusation is more harmful than missing some AI-generated text, so the system should prioritize protecting human writers.
 
 
 ---
@@ -58,10 +60,12 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
+The average combined score for 10 clearly AI-generated texts is at least 0.20 higher than the average score for 10 human-written texts in each of three trials.
 
 
 **Why this target:**
 
+The detector should show a meaningful distinction between clearly different sources.
 
 
 ---
@@ -70,10 +74,12 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
+At least one test input produces each of the three labels, `human`, `unsure`, and `ai`, across the evaluation tests.
 
 
 **Why this target:**
 
+Every label represents a different user-facing outcome, so none should be impossible to reach because of incorrect thresholds.
 
 
 ---
@@ -82,10 +88,12 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
+For 5 submitted appeals, every appeal creates an append-only audit-log entry containing the content ID, creator ID, reasoning, and `under_review` status.
 
 
 **Why this target:**
 
+Writers need evidence that their appeal was received, and the original decision must remain available for accountability.
 
 
 ---
@@ -94,10 +102,12 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
+Requests with missing, empty, or overlong text return a clear client-error response, make no detector decision, and create a rejection entry in the audit log in all three trials.
 
 
 **Why this target:**
 
+Bad input should not crash the service or produce a misleading AI/human judgment. Logging rejected requests also makes failures visible for later diagnosis.
 
 
 ---
