@@ -289,17 +289,18 @@ I would like to increase the reference value in calculating the low_punctuation.
 
 ## Rate Limiting
 
-**My limits:** ___ per minute, ___ per day
+**My limits:** _5__ per minute, _50__ per day
 
 **Why those numbers and not others:**
 <!-- Think about two people: a real writer submitting their own work a few
      times an hour, and a script sending a thousand variations to map your
      thresholds. Your numbers have to be liveable for the first and hostile to
      the second. -->
+Each /submit runs a language model (GPT-2) inside the request, which takes about 1–2 seconds and a lot of CPU on a laptop. A real writer submitting a piece, reading the label and maybe revising doesn't need more than a few checks per minute, so 5 per minute leaves normal use untouched. It stops a script from sending requests in a tight loop and tying up the model. 50 per day is generous for one person, since even a heavy user rarely checks more than a few dozen pieces in a day. It is low enough that a script can't use it to run thousands of submissions, which would make a probing attack (trying variations until a text scores as human) slow and visible. I picked limits that are tight enough to protect the model and the audit log, but loose enough that an honest writer wouldn't hit them.
 
-**What a caller counts as:** <!-- per address, or per creator_id? They fail
-differently — one script can look like a thousand callers, and one household
-can look like one. -->
+**What a caller counts as:** <!-- per address, or per creator_id? They fail differently — one script can look like a thousand callers, and one household can look like one. -->
+
+per creator_id
 
 **The run of status codes when I pushed past it:**
 
@@ -445,7 +446,13 @@ Second, averaging squeezes the combined score. The score is 0.7*model + 0.3*styl
 
 **What I changed:**
 
+Improve the style signal in stylometry.py. Make it vary much more between AI and human text. 
+
+Replaced type-token ratio and punctuation density in stylometry.py with stock AI words and first-person words. New formula in style_signal: 0.2 * low_spread + 0.4 * stock_words + 0.4 * no_first_person. Stock words are scaled as min(rate/4, 1). First-person words are flipped, so more of them reads as human.
+
 **Which diagnosis pointed at it:**
+
+For now, all three measures in the style signal did not vary much between AI and human text, while for stock AI words and first-person words can seperate them well.
 
 ### Attack Run — After
 
@@ -457,7 +464,7 @@ Second, averaging squeezes the combined score. The score is 0.7*model + 0.3*styl
 
 <!-- Widening the unsure band usually fixes one problem and creates another.
      Reporting that trade honestly is worth full credit. -->
-
+Running run_eval.py after the change, 8 of the 10 texts in the "clearly AI text" scenario were labeled ai, compared with 4 of 10 before the change.
 
 
 ---
@@ -467,6 +474,7 @@ Second, averaging squeezes the combined score. The score is 0.7*model + 0.3*styl
 <!-- For each attack still getting through and each criterion still missed:
      what you'd do, and why you stopped. -->
 
+The label coverage criterion (criterion 3) still failed. The evaluation produced only the human and unsure labels, and no ai. The signals themselves now work, since the clearly-AI scenario reached ai in 8 of 10 texts. The likely problem is that the inputs in the label coverage scenario aren't AI-like enough. I plan to replace them with stronger examples and re-run the evaluation.
 
 
 **The trade I'd make if this ran for real:**
@@ -474,7 +482,7 @@ Second, averaging squeezes the combined score. The score is 0.7*model + 0.3*styl
 <!-- Two sentences. Fewer wrong accusations means more AI text getting through.
      Say which way you'd go and WHO PAYS FOR IT. -->
 
-
+If this ran for real, I would keep the unsure band wide and set the ai threshold high (0.75 or above). I would accept that some AI-written text gets through labeled unsure or human, because a wrong accusation costs a real writer their reputation and trust in the site, while a missed AI text costs the site only a little. The people who pay for this choice are the platform and its readers, who see more undisclosed AI content, and not the writers, who are the ones I want to protect.
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
