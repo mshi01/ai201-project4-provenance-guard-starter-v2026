@@ -9,8 +9,8 @@ stubs, not implementations: what they compute is yours, and so is how you
 combine them.
 
     sentence_length_spread   do sentences vary in length, or march in step?
-    type_token_ratio         how much of the vocabulary repeats?
-    punctuation_density      how much punctuation, and how varied?
+    stock_ai_word_rate       how often stock AI words ("furthermore", "crucial") appear
+    first_person_rate        how often the writer says I / my / we
 
 Why these might differ between human and AI writing: generated prose tends
 toward even, mid-length sentences and a narrower band of vocabulary, because
@@ -83,40 +83,39 @@ def sentence_length_spread(text: str) -> float:
     return statistics.stdev(lengths) / mean_length if mean_length else 0.0
 
 
-def type_token_ratio(text: str) -> float:
+STOCK_AI_WORDS = frozenset("""
+    furthermore moreover additionally therefore ultimately overall essential
+    crucial pivotal paramount holistic leverage foster multifaceted landscape
+    imperative significantly effectively sustainable innovative however
+    important notably
+""".split())
+
+FIRST_PERSON_WORDS = frozenset({"i", "my", "me", "we", "our"})
+
+
+def stock_ai_word_rate(text: str) -> float:
     """
-    Unique words over total words. ← TODO
+    Stock AI words per 100 words. Higher means more AI-ish.
 
-    Returns:
-        A float between 0 and 1. Higher means more varied vocabulary.
-
-    Worth knowing before you rely on it: this measure falls as text gets
-    longer, because common words repeat. Two texts of different lengths aren't
-    directly comparable on it, and if your test inputs vary a lot in length,
-    that alone can look like a signal.
+    Words like "furthermore", "crucial" and "holistic" are over-represented in
+    generated prose. Blind spot: formal human writing uses them too, and
+    swapping a few words defeats it.
     """
     tokens = words(_analysis_text(text))
     if not tokens:
         return 0.0
-    return len(set(tokens)) / len(tokens)
+    return sum(t in STOCK_AI_WORDS for t in tokens) / len(tokens) * 100
 
 
-def punctuation_density(text: str) -> float:
+def first_person_rate(text: str) -> float:
     """
-    How much punctuation, relative to length. ← TODO
-
-    Returns:
-        A float. Whether you count all punctuation or only some kinds — commas,
-        semicolons, dashes — is a real choice. Semicolons and em dashes are
-        more interesting than full stops, because they vary more between
-        writers.
+    First-person words (I, my, me, we, our) per 100 words. Higher means more
+    human — the style signal flips it.
     """
-    bounded_text = _analysis_text(text)
-    if not bounded_text:
+    tokens = words(_analysis_text(text))
+    if not tokens:
         return 0.0
-
-    punctuation_count = len(re.findall(r"[^\w\s]", bounded_text))
-    return punctuation_count / len(bounded_text)
+    return sum(t in FIRST_PERSON_WORDS for t in tokens) / len(tokens) * 100
 
 
 # ── Combining them ───────────────────────────────────────────────────────────
@@ -148,15 +147,17 @@ def style_signal(text: str) -> float:
         return 0.0
 
     spread = sentence_length_spread(bounded_text)
-    vocabulary_variety = type_token_ratio(bounded_text)
-    punctuation = punctuation_density(bounded_text)
+    stock = stock_ai_word_rate(bounded_text)
+    first_person = first_person_rate(bounded_text)
 
     # Each component is scaled to 0-1, with higher values meaning more AI-like.
+    # Reference rates (per 100 words) come from calibration on sample texts:
+    # stock words ~0 for human vs ~6 for AI; first person ~4 vs ~0.5.
     low_spread = 1.0 / (1.0 + spread)
-    repeated_vocabulary = 1.0 - vocabulary_variety
-    low_punctuation = 1.0 - min(punctuation / 0.10, 1.0)
+    stock_words = min(stock / 4.0, 1.0)
+    no_first_person = 1.0 - min(first_person / 4.0, 1.0)
 
-    return (low_spread + repeated_vocabulary + low_punctuation) / 3.0
+    return 0.2 * low_spread + 0.4 * stock_words + 0.4 * no_first_person
 
 
 if __name__ == "__main__":
@@ -169,7 +170,7 @@ if __name__ == "__main__":
 
     print(f"{len(sentences(text))} sentences, {len(words(text))} words\n")
     print(f"sentence_length_spread   {sentence_length_spread(text)}")
-    print(f"type_token_ratio         {type_token_ratio(text)}")
-    print(f"punctuation_density      {punctuation_density(text)}")
+    print(f"stock_ai_word_rate       {stock_ai_word_rate(text)}")
+    print(f"first_person_rate        {first_person_rate(text)}")
     print(f"style_signal             {style_signal(text)}   (higher = more likely AI)")
     print("\nAll zeros? These are stubs — Milestone 4 is where you build them.")

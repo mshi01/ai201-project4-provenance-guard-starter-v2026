@@ -377,7 +377,12 @@ under **Rate Limiting**, and check GET /log recorded the rejections.
 
 **The single worst outcome** — the one I'd least want to explain to a writer
 whose work got caught by it:
-
+```
+| FP04 | false_positive | a student essay written to a rubric | 200 | `c_5f105441a134` | ai | 0.755 | BROKE |
+```
+```json
+{"timestamp": "2026-11-05T02:38:48+00:00", "content_id": "c_5f105441a134", "creator_id": "attacker_FP04", "guess": "ai", "model_score": 0.8329, "style_score": 0.5732389000367902, "combined_score": 0.755001670011037, "label": "We think this was probably written by AI.", "status": "decided"}
+```
 
 
 ---
@@ -388,20 +393,35 @@ whose work got caught by it:
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1.  |  |  |  |  |  |
-| 2.  |  |  |  |  |  |
-| 3.  |  |  |  |  |  |
-| 4.  |  |  |  |  |  |
-| 5.  |  |  |  |  |  |
+| 1. Across three repeated trials of 10 human-written texts, number of text per trial is labeled high-confidence AI | <= 1 | 0 | 0 | 0 | MET |
+| 2. The average combined score for 10 clearly AI-generated texts minus the average score for 10 human-written texts in each of three trials. | >= 0.20 | 0.25 | 0.24 | 0.25 | MET |
+| 3. At least one test input produces each of the three labels, `human`, `unsure`, and `ai`, across the evaluation tests. | >= 1 | unsure/human  | unsure/human | unsure/human | MISSED |
+| 4. For 5 submitted appeals, number of appeal creates an append-only audit-log entry containing the content ID, creator ID, reasoning, and `under_review` status. | 5 | 5 | 5 | 5 | MET |
+| 5. Requests with missing, empty, or overlong text return a clear client-error response, make no detector decision, and create a rejection entry in the audit log in all three trials. | 6 | 6 | 6 | 6 | MET |
 
 **Real output from one trial**, pasted as text, naming the file and function
 that produced it:
+python run_eval.py --label before
 
 ```json
-
+{
+    "status": 200,
+    "guess": "human",
+    "confidence": 0.21718541702378136,
+    "model_score": 0.1696,
+    "style_score": 0.32821805674593796,
+    "label": "We think this was probably written by a person.",
+    "sent": "Like knowing the stars exist, even if they're not out one night. Great"
+  },
 ```
 
 **Diagnoses**
+
+In the "label coverage" scenario alone, no input reached ai. But across the whole run (all three trials) all three labels did appear. In label coverage scenario: the inputs scored 0.60, 0.28, 0.54, 0.71 and 0.74. That gives 1 human, 4 unsure and 0 ai. The highest score, 0.737, is just under AI_THRESHOLD = 0.75. For clearly AI scenario, 4 of the 10 texts scored 0.76–0.80 and were labelled ai. All three labels therefore occur somewhere in the run.
+
+There are two obervations: First, the style score barely moves. style_signal sits between about 0.39 and 0.69 for almost everything, AI or human. The AI texts get 0.45–0.57, and the human ones get 0.33–0.65.
+
+Second, averaging squeezes the combined score. The score is 0.7*model + 0.3*style. With style stuck near 0.55, the combined score only passes 0.75 when the model score is above roughly 0.85–0.9. Only the strongest AI texts get there, and 6 of the 10 clearly-AI texts end up unsure.
 
 <!-- For each miss AND each broken attack: the stage and the mechanism.
 
