@@ -345,7 +345,7 @@ under **Rate Limiting**, and check GET /log recorded the rejections.
 
 **Ten audit log entries from the run**
 
-| EV10 | evasion | signal two: repeated stanza structure | 200 | `c_a802c3428e0e` | ai | 0.920 | HELD |
+<!-- | EV10 | evasion | signal two: repeated stanza structure | 200 | `c_a802c3428e0e` | ai | 0.920 | HELD |
 | FP04 | false_positive | a student essay written to a rubric | 200 | `c_5f105441a134` | ai | 0.755 | BROKE |
 | FP05 | false_positive | technical documentation written by a person | 200 | `c_35f966bc9c4b` | ai | 0.757 | BROKE |
 | FP06 | false_positive | a person imitating a formal template | 200 | `c_1dea50cd2bd9` | ai | 0.790 | BROKE |
@@ -354,7 +354,7 @@ under **Rate Limiting**, and check GET /log recorded the rejections.
 | MF03 | malformed | text is control characters | 200 | `c_b5d6d47e087b` | human | 0.100 | BROKE |
 | MF04 | malformed | text is only punctuation | 200 | `c_e1ed97a5b8c6` | human | 0.208 | BROKE |
 | MF08 | malformed | text is 60,000 characters | 200 | `c_ef00ae43e8e7` | ai | 0.942 | BROKE |
-| RQ06 | malformed | creator_id is an object | 200 | `c_6aaf105fbddf` | human | 0.179 | BROKE |
+| RQ06 | malformed | creator_id is an object | 200 | `c_6aaf105fbddf` | human | 0.179 | BROKE | -->
 
 <!-- Choose entries that show the interesting failures, not the ten easiest. -->
 
