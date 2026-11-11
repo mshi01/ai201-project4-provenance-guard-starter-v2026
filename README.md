@@ -344,9 +344,34 @@ under **Rate Limiting**, and check GET /log recorded the rejections.
 
 **Ten audit log entries from the run**
 
+| EV10 | evasion | signal two: repeated stanza structure | 200 | `c_a802c3428e0e` | ai | 0.920 | HELD |
+| FP04 | false_positive | a student essay written to a rubric | 200 | `c_5f105441a134` | ai | 0.755 | BROKE |
+| FP05 | false_positive | technical documentation written by a person | 200 | `c_35f966bc9c4b` | ai | 0.757 | BROKE |
+| FP06 | false_positive | a person imitating a formal template | 200 | `c_1dea50cd2bd9` | ai | 0.790 | BROKE |
+| FP07 | false_positive | human writing that repeats a phrase deliberately | 200 | `c_8e8648f3969d` | ai | 0.802 | BROKE |
+| PI02 | prompt_injection | instruction disguised as a system message | 200 | `c_35856735b6bc` | human | 0.277 | BROKE |
+| MF03 | malformed | text is control characters | 200 | `c_b5d6d47e087b` | human | 0.100 | BROKE |
+| MF04 | malformed | text is only punctuation | 200 | `c_e1ed97a5b8c6` | human | 0.208 | BROKE |
+| MF08 | malformed | text is 60,000 characters | 200 | `c_ef00ae43e8e7` | ai | 0.942 | BROKE |
+| RQ06 | malformed | creator_id is an object | 200 | `c_6aaf105fbddf` | human | 0.179 | BROKE |
+
 <!-- Choose entries that show the interesting failures, not the ten easiest. -->
 
 ```json
+{"timestamp": "2026-11-05T02:38:49+00:00", "creator_id": "attacker_MF01", "event": "rejected", "status": "rejected", "reason": "missing_or_empty_text"}
+{"timestamp": "2026-11-05T02:38:50+00:00", "creator_id": "attacker_flood", "event": "rejected", "status": "rejected", "reason": "rate_limited", "limit": "5 per 1 minute"}
+{"timestamp": "2026-11-05T02:38:48+00:00", "content_id": "c_09b6fb29741e", "creator_id": "attacker_EV01", "guess": "human", "model_score": 0.1635, "style_score": 0.6078353497590352, "combined_score": 0.29680060492771054, "label": "We think this was probably written by a person.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:48+00:00", "content_id": "c_5f105441a134", "creator_id": "attacker_FP04", "guess": "ai", "model_score": 0.8329, "style_score": 0.5732389000367902, "combined_score": 0.755001670011037, "label": "We think this was probably written by AI.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:48+00:00", "content_id": "c_35f966bc9c4b", "creator_id": "attacker_FP05", "guess": "ai", "model_score": 0.8005, "style_score": 0.6561441512925936, "combined_score": 0.757193245387778, "label": "We think this was probably written by AI.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:48+00:00", "content_id": "c_1dea50cd2bd9", "creator_id": "attacker_FP06", "guess": "ai", "model_score": 0.8814, "style_score": 0.5751938328320972, "combined_score": 0.7895381498496291, "label": "We think this was probably written by AI.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:48+00:00", "content_id": "c_8e8648f3969d", "creator_id": "attacker_FP07", "guess": "ai", "model_score": 0.8816, "style_score": 0.617148677951633, "combined_score": 0.8022646033854899, "label": "We think this was probably written by AI.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:49+00:00", "content_id": "c_35856735b6bc", "creator_id": "attacker_PI02", "guess": "human", "model_score": 0.2044, "style_score": 0.4464242580330258, "combined_score": 0.2770072774099077, "label": "We think this was probably written by a person.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:49+00:00", "content_id": "c_b5d6d47e087b", "creator_id": "attacker_MF03", "guess": "human", "model_score": 0.0, "style_score": 0.3333333333333333, "combined_score": 0.09999999999999999, "label": "We think this was probably written by a person.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:49+00:00", "content_id": "c_e1ed97a5b8c6", "creator_id": "attacker_MF04", "guess": "human", "model_score": 0.0112, "style_score": 0.6666666666666666, "combined_score": 0.20783999999999997, "label": "We think this was probably written by a person.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:50+00:00", "content_id": "c_ef00ae43e8e7", "creator_id": "attacker_MF08", "guess": "ai", "model_score": 0.9876, "style_score": 0.8342998552692413, "combined_score": 0.9416099565807723, "label": "We think this was probably written by AI.", "status": "decided"}
+{"timestamp": "2026-11-05T02:38:50+00:00", "content_id": "c_6aaf105fbddf", "creator_id": "unknown", "guess": "human", "model_score": 0.0492, "style_score": 0.48148148148148157, "combined_score": 0.17888444444444446, "label": "We think this was probably written by a person.", "status": "decided"}
+
+
 
 ```
 
