@@ -516,7 +516,62 @@ If this ran for real, I would keep the unsure band wide and set the ai threshold
 
      Do not delete and recreate this repository.
      ═════════════════════════════════════════════════════════════════════ -->
-
 ---
 
 📖 **How to run this project: [RUNNING.md](RUNNING.md)**
+
+---
+
+## Capstone
+
+**What This Extends**
+
+The capstone project extends the Provenance Guard project to strengthen its ability to detect AI written text.
+
+**The Shape**
+
+Shape C - Extend one capability. Add a stronger AI written text detecting capability by enhancing the style signal in Provenance Guard. I am not modifying the model signal and not changing how the combined score of model signal and style signal was calculated. 
+
+Previous Style Signal could not seperate human texts and AI texts well.
+
+| Measure |	Human texts | AI texts |
+|---|---|---|
+| Sentence-length spread | 0.33 | 0.29 |
+| Type-token ratio | 0.89 |	0.90 |
+| Punctuation density	| 0.028	| 0.026 |
+| style_signal | 0.547 | 0.539 |
+
+Sentence-length spread is fine in principle. For Type-token ratio, it depends on text length. Texts of 40–60 words almost always score about 0.9, so it measures length, not authorship. For punctuation density, it counts all punctuation mixes commas, apostrophes and full stops, so it carries no signal. Comma rate on its own does better.
+
+In Style Signal, keep sentence_length_spread and replace type_token_ratio and punctuation_density with four new measurements: 
+
+- sentence_length_spread: do sentences vary in length, or march in step?
+- stock_ai_word_rate: how often stock AI words ("furthermore", "crucial", "moreover", "essential") appear
+- first_person_rate: how often the writer says I / my / we
+- comma_rate: how many commas per 100 words
+- contraction_rate: how often the writer uses don't / it's / I've
+
+Each raw measurement in style_signal is converted to a 0–1 score where higher means more AI-like. For measures where more means more AI-like (stock AI words and commas), the rate is divided by a reference value and capped at 1.0, so one extreme text can't push the score past the top. For measures where more means more human (first-person words and contractions), the same conversion is subtracted from 1 so that the direction matches. Sentence-length spread has no natural upper limit, so 1 / (1 + spread) maps it into 0–1 and flips it, with even sentence lengths scoring as more AI-like. The reference values (4 stock words, 8 commas, 4 first-person words and 3 contractions per 100 words) are choices made from a small set of calibration sample texts.
+
+style_signal = 0.10 * low_spread
+        + 0.30 * stock_words
+        + 0.20 * no_first_person
+        + 0.20 * many_commas
+        + 0.20 * no_contractions
+
+**Running It**
+
+**Instrumentation**
+
+**What It Costs**
+
+**Run Log and Verdicts**
+
+**The Improvement**
+
+**What's Still Broken**
+
+**How I Used AI**
+
+
+

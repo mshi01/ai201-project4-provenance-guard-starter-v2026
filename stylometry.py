@@ -11,6 +11,8 @@ combine them.
     sentence_length_spread   do sentences vary in length, or march in step?
     stock_ai_word_rate       how often stock AI words ("furthermore", "crucial") appear
     first_person_rate        how often the writer says I / my / we
+    comma_rate               how many commas per 100 words
+    contraction_rate         how often the writer uses don't / it's / I've
 
 Why these might differ between human and AI writing: generated prose tends
 toward even, mid-length sentences and a narrower band of vocabulary, because
@@ -120,6 +122,36 @@ def first_person_rate(text: str) -> float:
 
 # ── Combining them ───────────────────────────────────────────────────────────
 
+CONTRACTION_RE = re.compile(r"\b\w+'(?:t|s|m|re|ve|ll|d)\b", re.IGNORECASE)
+
+
+def comma_rate(text: str) -> float:
+    """
+    Commas per 100 words. Higher means more AI-ish.
+
+    Generated prose leans on long, comma-chained sentences and lists. Blind
+    spot: formal or academic human writing is comma-heavy too.
+    """
+    bounded_text = _analysis_text(text)
+    tokens = words(bounded_text)
+    if not tokens:
+        return 0.0
+    return bounded_text.count(",") / len(tokens) * 100
+
+
+def contraction_rate(text: str) -> float:
+    """
+    Contractions (don't, I've, it's) per 100 words. Higher means more human —
+    the style signal flips it. Blind spot: "'s" also matches possessives, and
+    a careful human writer who avoids contractions looks AI-ish.
+    """
+    bounded_text = _analysis_text(text)
+    tokens = words(bounded_text)
+    if not tokens:
+        return 0.0
+    return len(CONTRACTION_RE.findall(bounded_text)) / len(tokens) * 100
+
+
 def style_signal(text: str) -> float:
     """
     The style signal as a 0–1 score. **Higher means more likely AI.** ← TODO
@@ -149,15 +181,27 @@ def style_signal(text: str) -> float:
     spread = sentence_length_spread(bounded_text)
     stock = stock_ai_word_rate(bounded_text)
     first_person = first_person_rate(bounded_text)
+    commas = comma_rate(bounded_text)
+    contractions = contraction_rate(bounded_text)
 
     # Each component is scaled to 0-1, with higher values meaning more AI-like.
     # Reference rates (per 100 words) come from calibration on sample texts:
-    # stock words ~0 for human vs ~6 for AI; first person ~4 vs ~0.5.
+    # stock words ~0 for human vs ~6 for AI; first person ~4 vs ~0.5;
+    # commas ~3 vs ~9; contractions ~3 vs ~0.7.
     low_spread = 1.0 / (1.0 + spread)
     stock_words = min(stock / 4.0, 1.0)
     no_first_person = 1.0 - min(first_person / 4.0, 1.0)
 
-    return 0.2 * low_spread + 0.4 * stock_words + 0.4 * no_first_person
+    many_commas = min(commas / 8.0, 1.0)
+    no_contractions = 1.0 - min(contractions / 3.0, 1.0)
+
+    return (
+        0.10 * low_spread
+        + 0.30 * stock_words
+        + 0.20 * no_first_person
+        + 0.20 * many_commas
+        + 0.20 * no_contractions
+    )
 
 
 if __name__ == "__main__":
@@ -172,5 +216,7 @@ if __name__ == "__main__":
     print(f"sentence_length_spread   {sentence_length_spread(text)}")
     print(f"stock_ai_word_rate       {stock_ai_word_rate(text)}")
     print(f"first_person_rate        {first_person_rate(text)}")
+    print(f"comma_rate               {comma_rate(text)}")
+    print(f"contraction_rate         {contraction_rate(text)}")
     print(f"style_signal             {style_signal(text)}   (higher = more likely AI)")
     print("\nAll zeros? These are stubs — Milestone 4 is where you build them.")
