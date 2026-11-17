@@ -534,7 +534,7 @@ Shape C - Extend one capability. Strengthen AI text detecting capability by enha
 
 I am not modifying the model signal and not changing how the combined score of model signal and style signal was calculated. 
 
-In previous versions, Style Signal could not seperate human texts and AI texts very well.
+In previous versions, the style signal could not seperate human texts and AI texts very well. As shown in the following table, the three metrics (sentence-length spread, type-token ratio, and punctuation density) did not differ significantly between Human texts and AI texts.
 
 | Measure |	Human texts | AI texts |
 |---|---|---|
@@ -543,7 +543,7 @@ In previous versions, Style Signal could not seperate human texts and AI texts v
 | Punctuation density	| 0.028	| 0.026 |
 | style_signal | 0.547 | 0.539 |
 
-Sentence-length spread is fine in principle. For Type-token ratio, it depends on text length. Texts of 40–60 words almost always score about 0.9, so it measures length, not authorship. For punctuation density, it counts all punctuation mixes commas, apostrophes and full stops, so it carries no signal. Comma rate on its own does better.
+In theory, AI texts have less variation in sentence length as compared to Human texts. Sentence-length spread aligns fine with this principle, just not very significant. For Type-token ratio, it depends on text length. Texts of 40–60 words almost always score about 0.9, so it measures length, not authorship. For punctuation density, it counts all punctuation mixes commas, apostrophes and full stops, so it carries no signal. Comma rate on its own might be better.
 
 In Style Signal, keep sentence_length_spread and replace type_token_ratio and punctuation_density with four new measurements: 
 
