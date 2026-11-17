@@ -526,13 +526,15 @@ If this ran for real, I would keep the unsure band wide and set the ai threshold
 
 **What This Extends**
 
-The capstone project extends the Provenance Guard project to strengthen its ability to detect AI written text.
+This capstone project extends the Provenance Guard project to strengthen its ability to detect AI written text.
 
 **The Shape**
 
-Shape C - Extend one capability. Add a stronger AI written text detecting capability by enhancing the style signal in Provenance Guard. I am not modifying the model signal and not changing how the combined score of model signal and style signal was calculated. 
+Shape C - Extend one capability. Strengthen AI text detecting capability by enhancing the style signal in Provenance Guard. 
 
-Previous Style Signal could not seperate human texts and AI texts well.
+I am not modifying the model signal and not changing how the combined score of model signal and style signal was calculated. 
+
+In previous versions, Style Signal could not seperate human texts and AI texts very well.
 
 | Measure |	Human texts | AI texts |
 |---|---|---|
