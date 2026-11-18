@@ -567,6 +567,8 @@ style_signal = 0.10 * low_spread
 
 **What It Costs**
 
+The first call takes about 10–20 seconds while GPT-2 loads. Once the model is loaded, it takes about 1-2 seconds per one POST /submit, which is dominated by the GPT-2 forward pass. 
+
 **Run Log and Verdicts**
 
 **The Improvement**

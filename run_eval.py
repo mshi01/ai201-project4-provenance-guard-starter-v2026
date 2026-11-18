@@ -24,7 +24,9 @@ back blank.
 import argparse
 import datetime as dt
 import json
+import statistics
 import sys
+import time
 from pathlib import Path
 
 import config
@@ -107,6 +109,7 @@ def main():
         print(f"!! {args.trials} trial(s). The submission asks for three.\n")
 
     rows = []
+    run_started = time.perf_counter()
     for scenario in scenarios.SCENARIOS:
         print(f"\n{scenario['name']}  (criterion {scenario.get('criterion') or '—'})")
 
@@ -115,9 +118,11 @@ def main():
             results = []
             for i, body in enumerate(bodies_for(scenario), 1):
                 preview = describe(body)
+                started = time.perf_counter()
                 try:
                     response = requests.post(f"{args.url}/submit", json=body,
                                              timeout=args.timeout)
+                    seconds = round(time.perf_counter() - started, 3)
                     payload = response.json() if response.content else {}
                     results.append({
                         "status": response.status_code,
@@ -126,10 +131,12 @@ def main():
                         "model_score": payload.get("model_score"),
                         "style_score": payload.get("style_score"),
                         "label": payload.get("label"),
+                        "seconds": seconds,
                         "sent": preview,
                     })
                 except Exception as exc:  # noqa: BLE001
                     results.append({"status": None, "error": f"{type(exc).__name__}: {exc}",
+                                    "seconds": round(time.perf_counter() - started, 3),
                                     "sent": preview})
 
             trials.append(results)
@@ -138,10 +145,45 @@ def main():
 
         rows.append({"scenario": scenario, "trials": trials})
 
-    write_report(rows, args)
+    write_report(rows, args, time.perf_counter() - run_started)
 
 
-def write_report(rows, args):
+def cost_lines(rows, total_seconds):
+    """
+    What the run cost. There is no API spend — the model runs locally — so cost
+    is wall-clock seconds. The very first request also loads the model, so it
+    is reported on its own and left out of the per-request statistics.
+    """
+    timed = [r for row in rows for trial in row["trials"] for r in trial
+             if r.get("seconds") is not None]
+    if not timed:
+        return []
+    first, rest = timed[0]["seconds"], [r["seconds"] for r in timed[1:]]
+    # Rejected requests never reach the model, so they are fast; split them out.
+    scored = [r["seconds"] for r in timed[1:] if r.get("status") == 200]
+    rejected = [r["seconds"] for r in timed[1:] if r.get("status") != 200]
+
+    def stats(values):
+        if not values:
+            return "n/a"
+        return (f"mean {statistics.mean(values):.2f}s · median "
+                f"{statistics.median(values):.2f}s · max {max(values):.2f}s "
+                f"· n={len(values)}")
+
+    return [
+        "## What it costs", "",
+        "No API spend: the model signal runs locally (gpt2). Cost is compute time.", "",
+        f"- Total wall-clock for this run: {total_seconds:.1f}s "
+        f"({len(timed)} requests)",
+        f"- First request (includes model load): {first:.2f}s",
+        f"- Scored requests (status 200, excluding first): {stats(scored)}",
+        f"- Rejected or failed requests: {stats(rejected)}",
+        f"- All requests after the first: {stats(rest)}",
+        "",
+    ]
+
+
+def write_report(rows, args, total_seconds=0.0):
     config.RESULTS_DIR.mkdir(exist_ok=True)
     stamp = dt.datetime.now().strftime("%Y-%m-%d_%H%M")
     label = f"_{args.label}" if args.label else ""
@@ -171,7 +213,8 @@ def write_report(rows, args):
         name = f"{number}. {scenario['name']}" if number else scenario["name"]
         lines.append(f"| {name} |  | {' | '.join([' '] * n)} |  |")
 
-    lines += ["", "---", "", "## What actually came back", "",
+    lines += [""] + cost_lines(rows, total_seconds)
+    lines += ["---", "", "## What actually came back", "",
               "Real output. Paste the relevant parts into your README — the rubric",
               "asks for the actual JSON, not a description of it.", ""]
 

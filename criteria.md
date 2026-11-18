@@ -60,12 +60,12 @@ Across three repeated trials of 10 human-written texts, no more than 1 text per 
 
 <!-- Your criterion. -->
 
-The average combined score for 10 clearly AI-generated texts is at least 0.20 higher than the average score for 10 human-written texts in each of three trials.
+The average combined score for 10 clearly AI-generated texts is at least 0.30 higher than the average score for 10 human-written texts in each of three trials.
 
 
 **Why this target:**
 
-The detector should show a meaningful distinction between clearly different sources.
+The detector should show a meaningful distinction between clearly different sources. I raised the target from 0.20 to 0.30 because I expect the stronger style score to make the detector more confident on AI text, so the gap between AI and human text should now be larger.
 
 
 ---
@@ -73,13 +73,12 @@ The detector should show a meaningful distinction between clearly different sour
 ## 3.
 
 <!-- Your criterion. -->
-
-At least one test input produces each of the three labels, `human`, `unsure`, and `ai`, across the evaluation tests.
+Across three repeated trials of the same 10 clearly AI-generated texts, the number labeled 'ai' should rise by at least 2 texts (20 percentage) over the pre-change baseline.
 
 
 **Why this target:**
 
-Every label represents a different user-facing outcome, so none should be impossible to reach because of incorrect thresholds.
+The capstone's goal was to improve the application's ability to detect AI-written text. It should show an increase in the number of clearly AI-generated texts that are labeled 'ai' compared to pre-change baseline.
 
 
 ---
@@ -88,12 +87,12 @@ Every label represents a different user-facing outcome, so none should be imposs
 
 <!-- Your criterion. -->
 
-For 5 submitted appeals, every appeal creates an append-only audit-log entry containing the content ID, creator ID, reasoning, and `under_review` status.
+The median scored request takes under 3 seconds and rejected requests under 0.5 seconds, with the model already loaded.
 
 
 **Why this target:**
 
-Writers need evidence that their appeal was received, and the original decision must remain available for accountability.
+Once the model has been loaded, the time it takes for the application to run should be within certain amount and the time limiting process is the GTP-2 forward pass. If rejected, it should reject instantly as no model is used for processing.
 
 
 ---
