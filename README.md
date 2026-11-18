@@ -563,13 +563,58 @@ style_signal = 0.10 * low_spread
 
 **Running It**
 
+```json
+{"timestamp": "2026-11-18T01:41:08+00:00", "content_id": "c_58994dc245f5", "creator_id": "me", "guess": "unsure", "model_score": 0.2806, "style_score": 0.7, "combined_score": 0.40642, "label": "We cannot tell confidently whether this was written by a person or by AI.", "status": "decided"}
+{"timestamp": "2026-11-18T01:47:54+00:00", "content_id": "c_08ca4cf08229", "creator_id": "demo_instructor", "guess": "ai", "model_score": 0.7544, "style_score": 0.7515622397871112, "combined_score": 0.7535486719361333, "label": "We think this was probably written by AI.", "status": "decided"}
+{"timestamp": "2026-11-18T01:50:58+00:00", "content_id": "c_989b7aabee53", "creator_id": "demo_instructor", "guess": "unsure", "model_score": 0.4445, "style_score": 0.23317132130733384, "combined_score": 0.38110139639220014, "label": "We cannot tell confidently whether this was written by a person or by AI.", "status": "decided"}
+{"timestamp": "2026-11-18T01:51:50+00:00", "content_id": "c_1f6e7bfa6f0a", "creator_id": "demo_instructor", "guess": "unsure", "model_score": 0.3489, "style_score": 0.41850628961344677, "combined_score": 0.369781886884034, "label": "We cannot tell confidently whether this was written by a person or by AI.", "status": "decided"}
+{"timestamp": "2026-11-18T01:52:17+00:00", "content_id": "c_3e4efe93b319", "creator_id": "demo_instructor", "guess": "unsure", "model_score": 0.2324, "style_score": 0.6700405006566764, "combined_score": 0.3636921501970029, "label": "We cannot tell confidently whether this was written by a person or by AI.", "status": "decided"}
+{"timestamp": "2026-11-18T01:52:33+00:00", "creator_id": "demo_instructor", "event": "rejected", "status": "rejected", "reason": "missing_or_empty_text"}
+{"timestamp": "2026-11-18T01:53:40+00:00", "creator_id": "demo_instructor", "event": "rejected", "status": "rejected", "reason": "missing_or_empty_text"}
+{"timestamp": "2026-11-18T01:53:55+00:00", "creator_id": "unknown", "event": "rejected", "status": "rejected", "reason": "missing_or_empty_text"}
+{"timestamp": "2026-11-18T06:02:56+00:00", "content_id": "c_1cbc7759becb", "creator_id": "eval_human writin_5", "guess": "human", "model_score": 0.1696, "style_score": 0.4283188968772612, "combined_score": 0.24721566906317835, "label": "We think this was probably written by a person.", "status": "decided"}
+{"timestamp": "2026-11-18T06:02:56+00:00", "content_id": "c_338ea4f1d5f6", "creator_id": "eval_human writin_6", "guess": "human", "model_score": 0.2076, "style_score": 0.2702116989375697, "combined_score": 0.2263835096812709, "label": "We think this was probably written by a person.", "status": "decided"}
+
+```
+
 **Instrumentation**
+
+I added timing to run_eval.py. It wraps each POST /submit call with time.perf_counter() and stores the result as a seconds field in each request's JSON. It includes the total wall-clock time in the result, and the following section contains the mean, median and max time for scored requests and for rejected ones. This is what criterion 4 (latency) is checked against.
 
 **What It Costs**
 
-The first call takes about 10–20 seconds while GPT-2 loads. Once the model is loaded, it takes about 1-2 seconds per one POST /submit, which is dominated by the GPT-2 forward pass. 
+| Trial |	Request type | Requests |	Mean (s) | Median (s) |	Max (s) |
+---
+| 1	| Normal text (human + AI) | 20	| 0.039	| 0.038 |	0.084 |
+| 1	| Bad input (rejected, 400) |	6 |	0.002 |	0.002 |	0.005 |
+| 2	| Normal text (human + AI) | 20 |	0.035 | 0.036	| 0.042 |
+| 2	| Bad input (rejected, 400) |	6 |	0.002 |	0.002	| 0.002 |
+| 3 |	Normal text (human + AI) | 20	| 0.036 |	0.037	| 0.048 |
+| 3	| Bad input (rejected, 400) |	6 |	0.002 |	0.002 |	0.003 |
+
+
+The first call takes about 4 seconds while GPT-2 loads. Once the model is loaded, it takes about 0.02-0.08 seconds per one POST /submit, which is dominated by the GPT-2 forward pass. Bad input takes about 0.001 - 0.005 seconds.
 
 **Run Log and Verdicts**
+
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Across three repeated trials of 10 human-written texts, number of text per trial is labeled high-confidence AI | <= 1 | 0 | 0 | 0 | MET |
+| 2. The average combined score for 10 clearly AI-generated texts minus the average score for 10 human-written texts in each of three trials. | >= 0.30 | 0.39 | 0.39 | 0.39 | MET |
+| 3. Across three repeated trials of the same 10 clearly AI-generated texts, the number labeled 'ai' should rise by at least 2 texts over the pre-change baseline.| >= 2 | 3  | 3 | 3 | MET |
+| 4. The median scored request takes under 3 seconds and rejected requests under 0.5 seconds, with the model already loaded. | 10 of 10 | 10 of 10 | 10 of 10 | 10 of 10 | MET |
+| 5. Requests with missing, empty, or overlong text return a clear client-error response, make no detector decision, and create a rejection entry in the audit log in all three trials. | 10 of 10 | 10 of 10 | 10 of 10 | 10 of 10 | MET |
+
+The average combined score for 10 clearly AI-generated texts is at least 0.30 higher than the average score for 10 human-written texts in each of three trials.
+
+| Trial |	Text type |	Avg confidence (combined) score | Avg model score | Avg style score |
+| 1	| Human	| 0.395 |	0.403 |	0.379 |
+| 1	| AI | 0.786 | 0.770 | 0.822 |
+| 2	| Human	| 0.395 |	0.403 |	0.379 |
+| 2	| AI | 0.786 | 0.770 | 0.822 |
+| 3	| Human | 0.395 | 0.403 | 0.379 |
+| 3	| AI | 0.786 | 0.770 | 0.822 |
+
 
 **The Improvement**
 

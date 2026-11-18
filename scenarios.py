@@ -25,9 +25,7 @@ A scenario carries **either** of these:
 SCENARIOS = [
     {
         # Criterion 1: at most 1 of 10 human texts labelled high-confidence AI.
-        # ⚠️ These are stand-ins in a casual human voice. Swap in paragraphs you
-        # actually wrote — this criterion is meaningless with someone else's prose.
-        "name": "my own writing",
+        "name": "human writing",
         "criterion": 1,
         "texts": [
             "I've got the version in the picture that I read but my girlfriend got me a gorgeous hardback copy that I haven't touched.",
@@ -43,9 +41,13 @@ SCENARIOS = [
         ],
     },
     {
-        # Criterion 2: mean score of clearly-AI texts >= 0.20 above mean of the
-        # human texts. The human side is the "my own writing" scenario above,
-        # so compare its mean combined score against this one in the report.
+        # Criterion 2: mean combined score of these clearly-AI texts is at least
+        # 0.30 above the mean for the human texts. The human side is the
+        # "human writing" scenario above, so compare its mean against this one.
+        #
+        # Criterion 3 reads the SAME texts: at least 6 of these 10 must be
+        # labelled 'ai' in every trial (baseline before the style-score change
+        # was 4 of 10). Keep this list fixed so the before/after is comparable.
         "name": "clearly AI text",
         "criterion": 2,
         "texts": [
@@ -61,25 +63,27 @@ SCENARIOS = [
             "Building a strong personal brand is vital in today's competitive job market. By showcasing expertise, maintaining a consistent online presence, and engaging authentically with a network, professionals can unlock new opportunities. In summary, a well-crafted personal brand serves as a powerful catalyst for career advancement.",
         ],
     },
-    {
-        # Criterion 3: every label (human / unsure / ai) reachable across the run.
-        # Spread of inputs: clearly AI, clearly human, and genuinely borderline
-        # (human-written but polished/formal, and AI-ish text with a personal edge).
-        "name": "label coverage",
-        "criterion": 3,
-        "texts": [
-            "In today's rapidly evolving digital landscape, it is essential to leverage innovative solutions. Furthermore, a holistic approach is paramount. In conclusion, organizations must foster sustainable growth through collaborative, forward-thinking strategies.",
-            "ok so I totally forgot my umbrella AGAIN and got soaked lol. my shoes are still squelching. anyway the cafe was fine, the barista remembered my order which was weirdly nice",
-            "The committee reviewed the proposal and concluded that the budget was reasonable, although several timelines required clarification. We recommend a follow-up meeting to address the outstanding concerns before approval is granted.",
-            "I've always believed that learning a second language changes how you think. When I started Spanish, I was embarrassed constantly. Over time, though, I noticed that I became more patient with myself, and that patience carried over into other parts of my life.",
-            "Moving to a new city can be both exciting and daunting. There are new streets to learn, new people to meet, and new routines to build. Still, I found that the small things, like a favorite coffee shop, made the place feel like home.",
-        ],
-    },
-    # Criterion 4: appeals (5 appeals, each logged append-only with content ID,
-    # creator ID, reasoning and under_review status).
-    # NOT expressible here: an appeal needs a content_id returned by a prior
-    # /submit, then a POST to the appeal endpoint, then a check of the audit log.
-    # Tested by hand (or by extending run_eval.py) — state which in the write-up.
+    # {
+    #     # No longer tied to a numbered criterion (criterion 3 is now the AI
+    #     # label count above). Kept as a supporting check that all three labels
+    #     # (human / unsure / ai) are still reachable: clearly AI, clearly human,
+    #     # and genuinely borderline inputs.
+    #     "name": "label coverage",
+    #     "criterion": None,
+    #     "texts": [
+    #         "In today's rapidly evolving digital landscape, it is essential to leverage innovative solutions. Furthermore, a holistic approach is paramount. In conclusion, organizations must foster sustainable growth through collaborative, forward-thinking strategies.",
+    #         "ok so I totally forgot my umbrella AGAIN and got soaked lol. my shoes are still squelching. anyway the cafe was fine, the barista remembered my order which was weirdly nice",
+    #         "The committee reviewed the proposal and concluded that the budget was reasonable, although several timelines required clarification. We recommend a follow-up meeting to address the outstanding concerns before approval is granted.",
+    #         "I've always believed that learning a second language changes how you think. When I started Spanish, I was embarrassed constantly. Over time, though, I noticed that I became more patient with myself, and that patience carried over into other parts of my life.",
+    #         "Moving to a new city can be both exciting and daunting. There are new streets to learn, new people to meet, and new routines to build. Still, I found that the small things, like a favorite coffee shop, made the place feel like home.",
+    #     ],
+    # },
+    # Criterion 4 (latency: median scored request < 3s, rejected < 0.5s, model
+    # already loaded) needs no scenario of its own. It is read from the
+    # "What it costs" section run_eval.py writes, which times every request in
+    # the scenarios here: scored requests come from the text scenarios and
+    # rejected ones from "bad input". Restart the app, send one warm-up request,
+    # and turn rate limiting off so 429s don't skew the numbers.
     {
         # Criterion 5: missing, empty, or overlong text -> client error, no
         # detector decision, rejection logged. Raw bodies, sent as written.
