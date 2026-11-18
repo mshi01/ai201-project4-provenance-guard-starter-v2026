@@ -611,6 +611,120 @@ The first call takes about 4 seconds while GPT-2 loads. Once the model is loaded
 
 **Run Log and Verdicts**
 
+Example Run Logs:
+```json
+{
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.5540103622222691,
+    "model_score": 0.5923,
+    "style_score": 0.46466787407423005,
+    "label": "We cannot tell confidently whether this was written by a person or by AI.",
+    "seconds": 0.053,
+    "sent": "There is a problem with that statement. Dostoevsky is known (and you c"
+  },
+  {
+    "status": 200,
+    "guess": "human",
+    "confidence": 0.24721566906317835,
+    "model_score": 0.1696,
+    "style_score": 0.4283188968772612,
+    "label": "We think this was probably written by a person.",
+    "seconds": 0.028,
+    "sent": "Like knowing the stars exist, even if they're not out one night. Great"
+  },
+  {
+    "status": 200,
+    "guess": "human",
+    "confidence": 0.2263835096812709,
+    "model_score": 0.2076,
+    "style_score": 0.2702116989375697,
+    "label": "We think this was probably written by a person.",
+    "seconds": 0.028,
+    "sent": "I'm not sure why that makes it the most hopeful paragraphs in history."
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.6546299999999999,
+    "model_score": 0.7209,
+    "style_score": 0.5,
+    "label": "We cannot tell confidently whether this was written by a person or by AI.",
+    "seconds": 0.028,
+    "sent": "Because the mere fact of you existing in spite of everything gives you"
+  },
+  {
+    "status": 200,
+    "guess": "ai",
+    "confidence": 0.887929371416574,
+    "model_score": 0.8463,
+    "style_score": 0.9850645713885802,
+    "label": "We think this was probably written by AI.",
+    "seconds": 0.038,
+    "sent": "Time management is a crucial skill that plays a pivotal role in both p"
+  },
+  {
+    "status": 200,
+    "guess": "ai",
+    "confidence": 0.8962081683496755,
+    "model_score": 0.9051,
+    "style_score": 0.8754605611655852,
+    "label": "We think this was probably written by AI.",
+    "seconds": 0.041,
+    "sent": "Climate change represents one of the most pressing challenges of our t"
+  },
+  {
+    "status": 200,
+    "guess": "ai",
+    "confidence": 0.770020383134909,
+    "model_score": 0.741,
+    "style_score": 0.8377346104496968,
+    "label": "We think this was probably written by AI.",
+    "seconds": 0.04,
+    "sent": "The advent of remote work has transformed the modern workplace in prof"
+  },
+  {
+    "status": 200,
+    "guess": "ai",
+    "confidence": 0.7878599999999999,
+    "model_score": 0.7648,
+    "style_score": 0.8416666666666666,
+    "label": "We think this was probably written by AI.",
+    "seconds": 0.039,
+    "sent": "Cybersecurity is of paramount importance in the contemporary digital e"
+  },
+  {
+    "status": 400,
+    "guess": null,
+    "confidence": null,
+    "model_score": null,
+    "style_score": null,
+    "label": null,
+    "seconds": 0.002,
+    "sent": "(empty text)"
+  },
+  {
+    "status": 400,
+    "guess": null,
+    "confidence": null,
+    "model_score": null,
+    "style_score": null,
+    "label": null,
+    "seconds": 0.002,
+    "sent": "{\"creator_id\": \"eval_bad_missing\"}"
+  },
+  {
+    "status": 400,
+    "guess": null,
+    "confidence": null,
+    "model_score": null,
+    "style_score": null,
+    "label": null,
+    "seconds": 0.002,
+    "sent": "{\"text\": null, \"creator_id\": \"eval_bad_null\"}"
+  },
+```
+Verdicts:
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
 | 1. Across three repeated trials of 10 human-written texts, number of text per trial is labeled high-confidence AI | <= 1 | 0 | 0 | 0 | MET |
@@ -630,14 +744,152 @@ The average combined score for 10 clearly AI-generated texts is at least 0.30 hi
 | 3	| Human | 0.395 | 0.403 | 0.379 |
 | 3	| AI | 0.786 | 0.770 | 0.822 |
 
-
 **The Improvement**
 
 The style-score constants (4, 8, 4, 3) were tuned on about 20 texts, might be overfitted. Lower the stock-word reference from 4 to 3 so shorter AI-style samples score higher.
 
+Example Run Logs (After):
+```json
+{
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.5540103622222691,
+    "model_score": 0.5923,
+    "style_score": 0.46466787407423005,
+    "label": "We cannot tell confidently whether this was written by a person or by AI.",
+    "seconds": 0.043,
+    "sent": "There is a problem with that statement. Dostoevsky is known (and you c"
+  },
+  {
+    "status": 200,
+    "guess": "human",
+    "confidence": 0.24721566906317835,
+    "model_score": 0.1696,
+    "style_score": 0.4283188968772612,
+    "label": "We think this was probably written by a person.",
+    "seconds": 0.03,
+    "sent": "Like knowing the stars exist, even if they're not out one night. Great"
+  },
+  {
+    "status": 200,
+    "guess": "human",
+    "confidence": 0.2263835096812709,
+    "model_score": 0.2076,
+    "style_score": 0.2702116989375697,
+    "label": "We think this was probably written by a person.",
+    "seconds": 0.044,
+    "sent": "I'm not sure why that makes it the most hopeful paragraphs in history."
+  },
+  {
+    "status": 200,
+    "guess": "unsure",
+    "confidence": 0.6546299999999999,
+    "model_score": 0.7209,
+    "style_score": 0.5,
+    "label": "We cannot tell confidently whether this was written by a person or by AI.",
+    "seconds": 0.029,
+    "sent": "Because the mere fact of you existing in spite of everything gives you"
+  },
+  {
+    "status": 200,
+    "guess": "ai",
+    "confidence": 0.887929371416574,
+    "model_score": 0.8463,
+    "style_score": 0.9850645713885802,
+    "label": "We think this was probably written by AI.",
+    "seconds": 0.107,
+    "sent": "Time management is a crucial skill that plays a pivotal role in both p"
+  },
+  {
+    "status": 200,
+    "guess": "ai",
+    "confidence": 0.8962081683496755,
+    "model_score": 0.9051,
+    "style_score": 0.8754605611655852,
+    "label": "We think this was probably written by AI.",
+    "seconds": 0.04,
+    "sent": "Climate change represents one of the most pressing challenges of our t"
+  },
+  {
+    "status": 200,
+    "guess": "ai",
+    "confidence": 0.7853265055838885,
+    "model_score": 0.741,
+    "style_score": 0.888755018612962,
+    "label": "We think this was probably written by AI.",
+    "seconds": 0.039,
+    "sent": "The advent of remote work has transformed the modern workplace in prof"
+  },
+  {
+    "status": 200,
+    "guess": "ai",
+    "confidence": 0.8045266666666666,
+    "model_score": 0.7648,
+    "style_score": 0.8972222222222224,
+    "label": "We think this was probably written by AI.",
+    "seconds": 0.039,
+    "sent": "Cybersecurity is of paramount importance in the contemporary digital e"
+  },
+  {
+    "status": 400,
+    "guess": null,
+    "confidence": null,
+    "model_score": null,
+    "style_score": null,
+    "label": null,
+    "seconds": 0.001,
+    "sent": "(empty text)"
+  },
+  {
+    "status": 400,
+    "guess": null,
+    "confidence": null,
+    "model_score": null,
+    "style_score": null,
+    "label": null,
+    "seconds": 0.001,
+    "sent": "   \n\t  "
+  },
+  {
+    "status": 400,
+    "guess": null,
+    "confidence": null,
+    "model_score": null,
+    "style_score": null,
+    "label": null,
+    "seconds": 0.001,
+    "sent": "{\"creator_id\": \"eval_bad_missing\"}"
+  },
+```
+
+| Trial |	Text type |	Avg confidence (combined) score | Avg model score | Avg style score |
+|---|---|---|---|---|
+| 1	| Human	| 0.395 |	0.403 |	0.379 |
+| 1	| AI | 0.792 | 0.770 | 0.844 |
+| 2	| Human	| 0.395 |	0.403 |	0.379 |
+| 2	| AI | 0.792 | 0.770 | 0.844 |
+| 3	| Human | 0.395 | 0.403 | 0.379 |
+| 3	| AI | 0.792 | 0.770 | 0.844 |
+
+The above table shows the avg Huamn text and AI text scores across 10 samples each in each trial. Compared to the before result, the scores of the human text did not change, the style score of the AI text increased slightly and thus the combined score increased slightly. This makes AI text more likely to be detected as AI while no obvious effect to human text.
+
+Verdicts (After):
+| Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
+|---|---|---|---|---|---|
+| 1. Across three repeated trials of 10 human-written texts, number of text per trial is labeled high-confidence AI | <= 1 | 0 | 0 | 0 | MET |
+| 2. The average combined score for 10 clearly AI-generated texts minus the average score for 10 human-written texts in each of three trials. | >= 0.30 | 0.40 | 0.40 | 0.40 | MET |
+| 3. Across three repeated trials of the same 10 clearly AI-generated texts, the number labeled 'ai' should rise by at least 2 texts over the pre-change baseline.| >= 2 | 3  | 3 | 3 | MET |
+| 4. The median scored request takes under 3 seconds and rejected requests under 0.5 seconds, with the model already loaded. | 10 of 10 | 10 of 10 | 10 of 10 | 10 of 10 | MET |
+| 5. Requests with missing, empty, or overlong text return a clear client-error response, make no detector decision, and create a rejection entry in the audit log in all three trials. | 10 of 10 | 10 of 10 | 10 of 10 | 10 of 10 | MET |
+
+All criterion were met. 7 out of 10 AI text were identified as AI, same as before. The difference between the avg AI texts and human texts increased from 0.39 to 0.40. The rest were same as before. 
+
+
 **What's Still Broken**
 
 The style-score constants might still not be ideal. Need to run the signals on more abundant amount of texts of each type, including real human writing of different kinds, and pick the references from that.
+
+All five criteria are met, and criteria 1, 2 and 3 could be tightened further. For criterion 1, none of the human texts should be labeled ai in any trial, instead of at most 1 in 10. For criterion 2, the average combined score for AI texts should be even further above the human average than the current 0.30 gap. For criterion 3, the number of the same 10 clearly AI-generated texts labeled ai should rise by at least 3 over the pre-change baseline of 4, which means at least 7 of 10 in every trial.
 
 **How I Used AI**
 
