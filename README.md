@@ -563,6 +563,24 @@ style_signal = 0.10 * low_spread
 
 **Running It**
 
+I took Path B: local, with logs. The service runs on my own machine at http://127.0.0.1:5000 and is not deployed to a hosting service. This project doesn't fit a free host: torch takes roughly 200–800 MB and the gpt2 weights about 550 MB loaded into RAM, while a free tier gives 512 MB, and a free host has no persistent disk, so the 550 MB model would download again after every idle spin-down. I keep the audit log in logs/audit.jsonl and commit it as evidence.
+
+To run it:
+```
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python detector.py        # downloads the model, about 550 MB, once
+python app.py             # starts the service
+```
+Full setup, every command and the routes are in RUNNING.md.
+
+**Instrumentation**
+
+Every request writes one JSON line to logs/audit.jsonl through audit.py. A decision entry records the nine required fields: timestamp, content_id, creator_id, guess, model_score, style_score, combined_score, label and status. A rejected request (empty, missing or overlong text, or a rate-limited request) is also logged, as a rejected entry with the reason, such as text_too_long or rate_limited. An appeal changes the status from decided to under_review.
+
+I added timing to run_eval.py. It wraps each POST /submit call with time.perf_counter() and stores the result as a seconds field in each request's JSON. It includes the total wall-clock time in the result, and the following section contains the mean, median and max time for scored requests and for rejected ones. This is what criterion 4  is checked against.
+
 ```json
 {"timestamp": "2026-11-18T01:41:08+00:00", "content_id": "c_58994dc245f5", "creator_id": "me", "guess": "unsure", "model_score": 0.2806, "style_score": 0.7, "combined_score": 0.40642, "label": "We cannot tell confidently whether this was written by a person or by AI.", "status": "decided"}
 {"timestamp": "2026-11-18T01:47:54+00:00", "content_id": "c_08ca4cf08229", "creator_id": "demo_instructor", "guess": "ai", "model_score": 0.7544, "style_score": 0.7515622397871112, "combined_score": 0.7535486719361333, "label": "We think this was probably written by AI.", "status": "decided"}
@@ -576,10 +594,6 @@ style_signal = 0.10 * low_spread
 {"timestamp": "2026-11-18T06:02:56+00:00", "content_id": "c_338ea4f1d5f6", "creator_id": "eval_human writin_6", "guess": "human", "model_score": 0.2076, "style_score": 0.2702116989375697, "combined_score": 0.2263835096812709, "label": "We think this was probably written by a person.", "status": "decided"}
 
 ```
-
-**Instrumentation**
-
-I added timing to run_eval.py. It wraps each POST /submit call with time.perf_counter() and stores the result as a seconds field in each request's JSON. It includes the total wall-clock time in the result, and the following section contains the mean, median and max time for scored requests and for rejected ones. This is what criterion 4 (latency) is checked against.
 
 **What It Costs**
 
@@ -618,9 +632,22 @@ The average combined score for 10 clearly AI-generated texts is at least 0.30 hi
 
 **The Improvement**
 
+The style-score constants (4, 8, 4, 3) were tuned on about 20 texts, might be overfitted. Lower the stock-word reference from 4 to 3 so shorter AI-style samples score higher.
+
 **What's Still Broken**
+
+The style-score constants might still not be ideal. Need to run the signals on more abundant amount of texts of each type, including real human writing of different kinds, and pick the references from that.
 
 **How I Used AI**
 
+- I used AI to extract the scores and times (in seconds) from the raw log and to calculate the averages across trials. It did this quickly, and I checked that the numbers were correct. The table it generated wasn't in the shape I wanted, so I only had to reformat it.
+
+- I had a problem with this command when the text had several lines:
+```
+"curl -X POST http://127.0.0.1:5000/submit \
+  -H "Content-Type: application/json" \
+  -d '{"text": "some writing", "creator_id": "me"}'
+```
+The AI suggested the apostrophe (') in my sentence was the most likely cause. I found that the real cause was the line breaks in the text. Single-line text worked without any problem.
 
 

@@ -189,7 +189,8 @@ def style_signal(text: str) -> float:
     # stock words ~0 for human vs ~6 for AI; first person ~4 vs ~0.5;
     # commas ~3 vs ~9; contractions ~3 vs ~0.7.
     low_spread = 1.0 / (1.0 + spread)
-    stock_words = min(stock / 4.0, 1.0)
+    # stock_words = min(stock / 4.0, 1.0)
+    stock_words = min(stock / 3.0, 1.0) # change from 4 to 3 for improvement
     no_first_person = 1.0 - min(first_person / 4.0, 1.0)
 
     many_commas = min(commas / 8.0, 1.0)
