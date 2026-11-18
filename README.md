@@ -598,7 +598,7 @@ I added timing to run_eval.py. It wraps each POST /submit call with time.perf_co
 **What It Costs**
 
 | Trial |	Request type | Requests |	Mean (s) | Median (s) |	Max (s) |
----
+| --- | --- | --- | --- | --- | --- |
 | 1	| Normal text (human + AI) | 20	| 0.039	| 0.038 |	0.084 |
 | 1	| Bad input (rejected, 400) |	6 |	0.002 |	0.002 |	0.005 |
 | 2	| Normal text (human + AI) | 20 |	0.035 | 0.036	| 0.042 |
@@ -622,6 +622,7 @@ The first call takes about 4 seconds while GPT-2 loads. Once the model is loaded
 The average combined score for 10 clearly AI-generated texts is at least 0.30 higher than the average score for 10 human-written texts in each of three trials.
 
 | Trial |	Text type |	Avg confidence (combined) score | Avg model score | Avg style score |
+|---|---|---|---|---|
 | 1	| Human	| 0.395 |	0.403 |	0.379 |
 | 1	| AI | 0.786 | 0.770 | 0.822 |
 | 2	| Human	| 0.395 |	0.403 |	0.379 |
