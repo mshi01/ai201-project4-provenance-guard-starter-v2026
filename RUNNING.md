@@ -3,12 +3,11 @@
 Everything about how the starter works.
 
 This is a **web service**. It runs on your machine and you talk to it with
-`curl` from another terminal. If you've not built a backend before, that's
-assumed — the starter ships one that already answers.
+`curl` from another terminal. 
 
 ---
 
-## Before your first class
+## First time running this project
 
 ```bash
 python3 -m venv .venv
@@ -32,7 +31,7 @@ That downloads about 550 MB and scores a sample.
 
 ---
 
-## Your first five minutes
+## First try '/ping' route
 
 Two terminals. In the first:
 
@@ -68,7 +67,7 @@ sent it data, it sent something back.
 `/ping` still answers: if it does, the problem is in your handler; if it
 doesn't, it's the service itself, and that's a help-channel question.
 
-Then try the route you're going to build:
+## Then try the '/submit' route:
 
 ```bash
 curl -X POST http://127.0.0.1:5000/submit \
@@ -76,8 +75,26 @@ curl -X POST http://127.0.0.1:5000/submit \
   -d '{"text": "some writing", "creator_id": "me"}'
 ```
 
-It returns a `501` saying it isn't built yet. **That's the correct starting
-position.**
+Example Usage:
+
+```bash
+curl -X POST http://127.0.0.1:5000/submit \
+  -H "Content-Type: application/json" \
+  -d @samples/clearly_ai.json
+```
+Or
+
+```bash
+curl -X POST http://127.0.0.1:5000/submit \
+  -H "Content-Type: application/json" \
+  -d @- <<'EOF'
+{
+  "text": "Time management is a crucial skill that plays a pivotal role in both personal and professional success. By prioritizing tasks, setting clear goals, and minimizing distractions, individuals can enhance their productivity. Moreover, effective time management contributes to reduced stress and improved well-being.",
+  "creator_id": "me"
+}
+EOF
+```
+
 
 ---
 
