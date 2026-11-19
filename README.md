@@ -897,7 +897,7 @@ All five criteria are met, and criteria 1, 2 and 3 could be tightened further. F
 
 - I had a problem with this command when the text had several lines:
 ```
-"curl -X POST http://127.0.0.1:5000/submit \
+curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
   -d '{"text": "some writing", "creator_id": "me"}'
 ```

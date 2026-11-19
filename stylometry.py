@@ -186,7 +186,7 @@ def style_signal(text: str) -> float:
 
     # Each component is scaled to 0-1, with higher values meaning more AI-like.
     # Reference rates (per 100 words) come from calibration on sample texts:
-    # stock words ~0 for human vs ~6 for AI; first person ~4 vs ~0.5;
+    # stock words ~0 for human vs ~4 for AI; first person ~4 vs ~0.5;
     # commas ~3 vs ~9; contractions ~3 vs ~0.7.
     low_spread = 1.0 / (1.0 + spread)
     # stock_words = min(stock / 4.0, 1.0)
